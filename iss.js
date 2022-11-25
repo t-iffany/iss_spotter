@@ -30,7 +30,7 @@ const fetchMyIP = function(callback) {
       return;
     }
     // if we get here, all's well and we got the data
-    // parse and extract the IP address and pass that through to the callback
+    // parse and extract the IP address and pass that through to                                                                                the callback
     const ip = JSON.parse(body);
     callback(null, ip);
   });
@@ -39,7 +39,7 @@ const fetchMyIP = function(callback) {
 // FUNCTION TO FETCH COORDINATES BY IP
 // In the function, make the request to the API, and have it pass back the relevant (lat/lng) data as an object via callback.
 const fetchCoordsByIP = function(ip, callback) {
-  request(`http://ipwho.is/${ip}`, (error, response, body) => {
+  request(`http://ipwho.is/${ip.ip}`, (error, response, body) => {
     // error can be set if invalid domain, user is offline, etc.
     if (error) {
       callback(error, null);
@@ -54,9 +54,9 @@ const fetchCoordsByIP = function(ip, callback) {
       return;
     }
     // if we get here, all's well and we got the data
-    const { latitude, longitude } = parsedBody;
+    const {latitude, longitude} = parsedBody;
 
-    callback(null, { latitude, longitude });
+    callback(null, {latitude, longitude});
   });
 };
 
@@ -95,4 +95,38 @@ const fetchISSFlyOverTimes = function(coords, callback) {
   });
 };
 
-module.exports = { fetchISSFlyOverTimes };  //don't need to export other function since we are not testing it right now
+// Implement one primary function that index.js can call
+/**
+ * This function orchestrates multiple API requests in order to determine the next 5 upcoming ISS fly overs for the user's current location.
+ * Input:
+ *   - A callback with an error or results.
+ * Returns (via Callback):
+ *   - An error, if any (nullable)
+ *   - The fly-over times as an array (null if error):
+ *     [ { risetime: <number>, duration: <number> }, ... ]
+ */
+
+const nextISSTimesForMyLocation = function(callback) {
+  fetchMyIP((error, ip) => {
+    if (error) {
+      return callback(error, null);
+    }
+
+    fetchCoordsByIP(ip, (error, coordinates) => {
+      if (error) {
+        return callback(error, null);
+      }
+
+      fetchISSFlyOverTimes(coordinates, (error, nextPass) => {
+        if (error) {
+          return callback(error, null);
+        }
+
+        callback(null, nextPass);
+      });
+    });
+  });
+};
+
+
+module.exports = { nextISSTimesForMyLocation };  //don't need to export other function since we are not testing it right now
