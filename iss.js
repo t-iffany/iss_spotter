@@ -129,4 +129,4 @@ const nextISSTimesForMyLocation = function(callback) {
 };
 
 
-module.exports = { nextISSTimesForMyLocation };  //don't need to export other function since we are not testing it right now
+module.exports = { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes, nextISSTimesForMyLocation };  //don't need to export other function since we are not testing it right now
