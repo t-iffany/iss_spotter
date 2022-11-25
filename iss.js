@@ -7,6 +7,8 @@
  *   - The IP address as a string (null if error). Example: "162.245.144.188"
  * endpoint to return IPv4 IP address in JSON format 'https://api.ipify.org?format=json'
  - returns {"ip":"216.232.190.69"}
+ * retrieve current IP: https://www.whatismyip.com/
+ * retrieve long/lat coordinates: http://ipwho.is/${YOUR IP}
  */
 
 // FUNCTION TO FETCH OUR IP ADDRESS
@@ -52,10 +54,45 @@ const fetchCoordsByIP = function(ip, callback) {
       return;
     }
     // if we get here, all's well and we got the data
-    const {latitude, longitude} = parsedBody;
+    const { latitude, longitude } = parsedBody;
 
-    callback(null, {latitude, longitude});
+    callback(null, { latitude, longitude });
   });
 };
 
-module.exports = { fetchCoordsByIP };  //don't need to export other function since we are not testing it right now
+// FUNCTION TO FETCH THE NEXT ISS FLYOVERS FOR OUR GEO COORDINATES
+// Input: latitude/longitude pair, altitude (optional), how many results to return (optional)
+// Output: same inputs, time stamp when the API ran, success/failure msg, list of passes
+/**
+ * Makes a single API request to retrieve upcoming ISS fly over times the for the given lat/lng coordinates.
+ * Input:
+ *   - An object with keys `latitude` and `longitude`
+ *   - A callback (to pass back an error or the array of resulting data)
+ * Returns (via Callback):
+ *   - An error, if any (nullable)
+ *   - The fly over times as an array of objects (null if error). Example:
+ *     [ { risetime: 134564234, duration: 600 }, ... ]
+ */
+
+const fetchISSFlyOverTimes = function(coords, callback) {
+  const url = `https://iss-flyover.herokuapp.com/json/?lat=${coords.latitude}&lon=${coords.longitude}`;
+
+  request(url, (error, response, body) => {
+    if (error) {
+      callback(error, null);
+      return;
+    }
+
+    if (response.statusCode !== 200) {
+      const msg = `Status Code ${response.statusCode} when fetching ISS pass times. Response: ${body}`;
+      callback(Error(msg), null);
+      return;
+    }
+    // if we get here, we sucessfully got the data
+    // parse the returned body so we can check its information
+    const passes = JSON.parse(body).response;
+    callback(null, passes);
+  });
+};
+
+module.exports = { fetchISSFlyOverTimes };  //don't need to export other function since we are not testing it right now
